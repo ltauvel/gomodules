@@ -1,6 +1,6 @@
 # filesystem
 
-`filesystem` is as a [Go](https://github.com/golang/go) package at providing file system :
+`filesystem` is as a [Go](https://github.com/golang/go) package aimed at providing file system :
 
 - Distinguished object types for directories and files
 - Copy files or folders
