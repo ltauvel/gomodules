@@ -10,7 +10,11 @@ func LoadDir(path string) Directory {
 }
 func ReadDir(path string) ([]Directory, []File) {
 	dir := LoadDir(path)
-	return dir.Read()
+	return dir.Read(false)
+}
+func ReadDirRecursive(path string) ([]Directory, []File) {
+	dir := LoadDir(path)
+	return dir.Read(true)
 }
 func CreateDir(path string) Directory {
 	dir := Directory{}

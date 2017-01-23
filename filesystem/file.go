@@ -10,22 +10,13 @@ type File struct {
 	Item
 }
 
-func (file *File) Load(path string) *File {
-	console.PrintDebug("Loading file", path)
-	
-	if file.Exists(path) {
-		f, _ := os.Stat(path)
-		file.Name = f.Name()
-		file.FullName = path
-		file.Size = f.Size()
-		file.Mode = f.Mode()
-		file.ModTime = f.ModTime()
-		file.Sys = f.Sys()
-	} else {
-		console.PrintError("File does ot exists")
-	}
-	
-	return file
+
+func (file *File) load(path string, requestbasepath string) {
+	file.Item.load(path, requestbasepath)
+}
+
+func (file *File) Load(path string) {	
+	file.load(path, "")
 }
 
 func (file File) Copy(destination string, force bool) File {

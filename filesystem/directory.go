@@ -10,25 +10,15 @@ type Directory struct {
 	Item
 }
 
-func (directory *Directory) Load(path string) *Directory {
-	console.PrintDebug("Loading directory", path)
-	
-	if directory.Exists(path) {
-		d, _ := os.Stat(path)
-		directory.Name = d.Name()
-		directory.FullName = path
-		directory.Size = d.Size()
-		directory.Mode = d.Mode()
-		directory.ModTime = d.ModTime()
-		directory.Sys = d.Sys()
-	} else {
-		console.PrintError("File does ot exists")
-	}
-	
-	return directory
+func (directory *Directory) load(path string, requestbasepath string) {
+	directory.Item.load(path, requestbasepath)
 }
 
-func (directory Directory) Read() ([]Directory, []File) {
+func (directory *Directory) Load(path string) {	
+	directory.load(path, "")
+}
+
+func (directory Directory) read(recurse bool, requestbasepath string) ([]Directory, []File) {
 	var resultdirs []Directory
 	var resultfiles []File
 
@@ -37,27 +27,39 @@ func (directory Directory) Read() ([]Directory, []File) {
 	items, _ := ioutil.ReadDir(directory.FullName)
 	for _, i := range items {
 
-		ttfsitem := Item{
-				Name: i.Name(),
-				FullName: joinPath(directory.FullName, i.Name()),
-				Size: i.Size(),
-				Mode: i.Mode(),
-				ModTime: i.ModTime(),
-				Sys: i.Sys(),
-			}
+		fsitem := Item{}
+		fsitem.load(joinPath(directory.FullName, i.Name()), requestbasepath)
 	
 		if i.IsDir() {
-			resultdirs = append(resultdirs, Directory{
-				Item: ttfsitem,
-			})
+
+			dir := Directory{
+				Item: fsitem,
+			}
+		
+			// Read subdirectories content
+			if recurse {
+				subdirs, subfiles := dir.read(recurse, requestbasepath)
+				resultdirs = append(resultdirs, subdirs...)
+				resultfiles = append(resultfiles, subfiles...)
+			}
+		
+			resultdirs = append(resultdirs, dir)
 		} else {
 			resultfiles = append(resultfiles, File{
-				Item: ttfsitem,
+				Item: fsitem,
 			})
 		}
 	}
 	
 	return resultdirs, resultfiles
+}
+
+func (directory Directory) Read(recurse bool) ([]Directory, []File) {
+	if(recurse) {
+		return directory.read(recurse, directory.FullName)
+	} else {
+		return directory.read(recurse, "")
+	}
 }
 
 func (directory Directory) Create(path string) Directory {
@@ -87,7 +89,7 @@ func (directory Directory) Copy(destination string, recurse bool, force bool) Di
 		// Creating the backup directory
 		os.MkdirAll(destination,0777)
 		
-		dirs, files := directory.Read()
+		dirs, files := directory.Read(false)
 		
 		// Copy subdirectories
 		if recurse {

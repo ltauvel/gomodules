@@ -47,4 +47,3 @@ Read a directory
 	
 	subdirs, subfiles := filesystem.ReadDir(srcpath)
 	
-	
